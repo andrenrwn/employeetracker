@@ -5,8 +5,9 @@ A command-line employeetracker_db MySQL database manager
 
 import { input, select, Separator } from '@inquirer/prompts';
 import { promises as fs } from 'fs';
-import { alldepartments, allroles, allemployees } from './lib/functions.mjs';
+import { getColumnNames, getAllRows, displayTable, displaySQLQueryTable } from './lib/functions.mjs';
 import db from './config/connection.mjs';
+import Table from 'cli-table';
 
 /* Menu options
 view all departments
@@ -99,6 +100,7 @@ let choices = [
 
 // a while loop menu for user to select options to add to the logo
 let answer;
+let tblength=0;
 do {
     answer = await select({
         message: "Select an option:\n",
@@ -109,17 +111,43 @@ do {
     console.log("Selected: ", answer);
 
     switch (answer) {
-        case "text":
+        case "view_departments":
+            console.log("DEPARTMENTS");
+            await displayTable("department");
             break;
-        case "circle":
+        case "view_roles":
+            console.log("ROLES");
+            // displayTable("role");
+            const view_roles_query = `SELECT role.id, role.title, role.salary, department.name FROM role 
+                            INNER JOIN department ON role.department_id = department.id ORDER BY role.id;`;
+            await displaySQLQueryTable(view_roles_query, "", ['Role id', 'Title', 'Salary', 'Department']);
             break;
-        case "triangle":
+        case "view_employees":
+            console.log("EMPLOYEES");
+            // displayTable("employee");
+            const view_employees_query = `
+            SELECT emp1.id, 
+                   emp1.first_name, 
+                   emp1.last_name, 
+                   role.title, 
+                   department.name, 
+                   role.salary, 
+                   CONCAT(emp2.first_name, ' ', emp2.last_name) as manager
+            FROM (((employee AS emp1 INNER JOIN role ON emp1.role_id = role.id) 
+                                     INNER JOIN department ON role.department_id = department.id) 
+                                     LEFT JOIN hierarchy ON emp1.id = hierarchy.id) 
+                                     LEFT JOIN employee AS emp2 ON hierarchy.manager_id = emp2.id ORDER BY emp1.id`;
+            await displaySQLQueryTable(view_employees_query, "", ['ID', 'First Name', 'Last Name', 'Title', 'Department', 'Salary', 'Manager']);
+            console.log("TABLE LENGTH:", tblength);
             break;
-        case "square":
+        case "add_department":
+            const newdeptname = await input({ message: 'Enter new department name' });
+            const get_onedeptname = `SELECT * FROM department WHERE name = '${newdeptname}';`;
+            await displaySQLQueryTable(get_onedeptname, "", ['ID', 'Department']);
             break;
-        case "pentagon":
+        case "add_role":
             break;
-        case "hexagon":
+        case "add_employee":
             break;
         case "septagon":
             break;
