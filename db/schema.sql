@@ -1,7 +1,12 @@
+/*
 # MySQL schema for the employee tracker database
 #
-# This variation uses a table called hierarchy to represent the many-to-one manager > employee relationship
-# This is done because arguably having a nullable manager_id might violate 1NF
+# A new table "hierarchy" is created here to represent the many-to-one manager > employee relationship
+# The schema provided suggests that an employee may have multiple managers, which will result in the employee duplicated when multiple managers are defined.
+#
+# So splitting the manager > employee relationship is required to normalize it, as arguably having a nullable manager_id might violate 1NF.
+# ( per https://en.wikipedia.org/wiki/First_normal_form "A table with at least one nullable attribute." might not meet 1NF)
+*/
 
 DROP DATABASE IF EXISTS employeetracker_db;
 CREATE DATABASE employeetracker_db;
@@ -11,7 +16,8 @@ USE employeetracker_db;
 CREATE TABLE department (
   id INT NOT NULL AUTO_INCREMENT,
   name VARCHAR(30),
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE (name)
 );
 
 CREATE TABLE role (

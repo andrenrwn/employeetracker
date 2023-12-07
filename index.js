@@ -5,7 +5,7 @@ A command-line employeetracker_db MySQL database manager
 
 import { input, select, Separator } from '@inquirer/prompts';
 import { promises as fs } from 'fs';
-import { getColumnNames, getAllRows, displayTable, displaySQLQueryTable } from './lib/functions.mjs';
+import { getSQLQuery, getColumnNames, getAllRows, displayTable, displaySQLQueryTable } from './lib/functions.mjs';
 import db from './config/connection.mjs';
 import Table from 'cli-table';
 
@@ -100,7 +100,7 @@ let choices = [
 
 // a while loop menu for user to select options to add to the logo
 let answer;
-let tblength=0;
+let tblength = 0;
 do {
     answer = await select({
         message: "Select an option:\n",
@@ -113,18 +113,19 @@ do {
     switch (answer) {
         case "view_departments":
             console.log("DEPARTMENTS");
-            await displayTable("department");
+            // await displayTable("department");
+            await displaySQLQueryTable(`SELECT * FROM department ORDER BY department.id`, "", ['Department Id', 'Department']);
             break;
         case "view_roles":
             console.log("ROLES");
-            // displayTable("role");
+            // await displayTable("role");
             const view_roles_query = `SELECT role.id, role.title, role.salary, department.name FROM role 
                             INNER JOIN department ON role.department_id = department.id ORDER BY role.id;`;
             await displaySQLQueryTable(view_roles_query, "", ['Role id', 'Title', 'Salary', 'Department']);
             break;
         case "view_employees":
             console.log("EMPLOYEES");
-            // displayTable("employee");
+            // await displayTable("employee");
             const view_employees_query = `
             SELECT emp1.id, 
                    emp1.first_name, 
@@ -142,8 +143,17 @@ do {
             break;
         case "add_department":
             const newdeptname = await input({ message: 'Enter new department name' });
-            const get_onedeptname = `SELECT * FROM department WHERE name = '${newdeptname}';`;
-            await displaySQLQueryTable(get_onedeptname, "", ['ID', 'Department']);
+            const query_department_name = `SELECT * FROM department WHERE name = '${newdeptname}';`;
+            const dept_exists = await getSQLQuery(query_department_name, "");
+            if (dept_exists.length > 0) {
+                console.log(`Error: ${newdeptname} department already exists`);
+            } else {
+                try {
+                    await getSQLQuery("INSERT INTO department (name) VALUES (?)", [newdeptname]);
+                } catch (err) {
+                    console.log("Error adding department:", err);
+                };
+            };
             break;
         case "add_role":
             break;
