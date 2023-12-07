@@ -28,6 +28,7 @@ CREATE TABLE role (
   FOREIGN KEY (department_id)
   REFERENCES department(id)
   ON DELETE SET NULL,
+  UNIQUE KEY roledepartment(title, department_id),
   PRIMARY KEY (id)
 );
 
