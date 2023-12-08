@@ -12,6 +12,7 @@
   "dependencies": {
     "@inquirer/prompts": "~3.3.0",
     "mysql2": "latest",
-    "cli-table": "latest"
+    "cli-table": "latest",
+    "colors": "latest"
   }
 }
