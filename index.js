@@ -17,17 +17,44 @@ let EmployeeTable = new ETEmployees();
 
 // Define menu selections
 let choices = [
-    new Separator(), // View
+    new Separator(), // Department operations
     {
         name: "View Departments",
         value: "view_departments",
         description: "View all departments",
     },
     {
+        name: "View Employee Budgets of Departments",
+        value: "view_salaries_by_department",
+        description: "View combined salaries of all employees by department",
+    },
+    {
+        name: "Add Department",
+        value: "add_department",
+        description: "Add a new department",
+    },
+    {
+        name: "Delete Department",
+        value: "delete_department",
+        description: "Delete a department",
+    },
+    new Separator(), // Role/title operations
+    {
         name: "View Roles",
         value: "view_roles",
         description: "View all employment roles",
     },
+    {
+        name: "Add Role",
+        value: "add_role",
+        description: "Add a new employment role",
+    },
+    {
+        name: "Delete Role",
+        value: "delete_role",
+        description: "Delete a role",
+    },
+    new Separator(), // Employee operations
     {
         name: "View Employees",
         value: "view_employees",
@@ -39,32 +66,16 @@ let choices = [
         description: "View employees by manager",
     },
     {
-        name: "View Employees of a Manager",
-        value: "view_employees_of_manager",
-        description: "View employees managed by a manager",
+        name: "View Manager Direct Reports",
+        value: "view_manager_direct_reports",
+        description: "View a manager's direct reports",
     },
-    {
-        name: "View Employee Budgets of Departments",
-        value: "view_salaries_by_department",
-        description: "View combined salaries of all employees by department",
-    },
-    new Separator(), // Add
-    {
-        name: "Add Department",
-        value: "add_department",
-        description: "Add a new department",
-    },
-    {
-        name: "Add Role",
-        value: "add_role",
-        description: "Add a new employment role",
-    },
+    new Separator(), // Manipulate employees
     {
         name: "Add Employee",
         value: "add_employee",
         description: "Add an employee",
     },
-    new Separator(), // Update
     {
         name: "Update Employee Role",
         value: "update_employee_role",
@@ -74,17 +85,6 @@ let choices = [
         name: "Update Employee Manager",
         value: "update_employee_manager",
         description: "Update an employee's manager",
-    },
-    new Separator(), // Delete
-    {
-        name: "Delete Department",
-        value: "delete_department",
-        description: "Delete a department",
-    },
-    {
-        name: "Delete Role",
-        value: "delete_role",
-        description: "Delete a role",
     },
     {
         name: "Delete Employee",
@@ -146,6 +146,18 @@ let chooseanemployee = async function (promptmessage = "Select an employee\n") {
     let chosenemployee = employeechoices.find((elem) => { return elem.value === employeechoice });
     return { employeechoice, chosenemployee };
 };
+
+
+async function view_manager_direct_reports() {
+    console.log("\nVIEW DIRECT REPORTS OF A MANAGER".inverse);
+    await EmployeeTable.show();
+    let { employeechoice, chosenemployee } = await chooseanemployee("Select a manager:\n");
+    if (employeechoice < 0) {
+        console.log("Cancelling".inverse);
+        return;
+    };
+    await EmployeeTable.show_direct_reports(employeechoice);
+}
 
 // Add a new department
 async function add_department() {
@@ -480,8 +492,8 @@ do {
             await EmployeeTable.show_by_manager();
             break;
 
-        case "view_employees_of_manager":
-            console.log("\nVIEW EMPLOYEES BY MANAGER".inverse);
+        case "view_manager_direct_reports":
+            await view_manager_direct_reports();
             break;
 
         case "add_department":
