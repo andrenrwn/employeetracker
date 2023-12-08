@@ -15,16 +15,6 @@ let DepartmentTable = new ETDepartments();
 let RoleTable = new ETRoles();
 let EmployeeTable = new ETEmployees();
 
-/* Menu options
-view all departments
-view all roles
-view all employees
-add a department
-add a role
-add an employee
-update employee role
- */
-
 // Define menu selections
 let choices = [
     new Separator(), // View
@@ -109,14 +99,59 @@ let choices = [
     },
 ];
 
-// Put tasks in functions to localize scoped variables.
+// Let users choose a department
+let chooseadepartment = async function (promptmessage = "Select a department\n") {
+    let deptchoices = await DepartmentTable.getrows();
+    deptchoices.push({ name: '<Cancel>', value: -1, description: "Cancel and return" });
+    let deptchoice = await select(
+        {
+            message: promptmessage,
+            choices: deptchoices,
+            pageSize: deptchoices.length,
+            loop: true,
+        });
+    // console.log(deptchoices); // debug log
+    let chosendept = deptchoices.find((elem) => { return elem.value === deptchoice });
+    return { deptchoice, chosendept };
+};
+
+// Let the user choose a role
+let choosearole = async function (promptmessage = "Select a role\n") {
+    let rolechoices = await RoleTable.getrows();
+    rolechoices.push({ name: '<Cancel>', value: -1, description: "Cancel and return" });
+    let rolechoice = await select(
+        {
+            message: promptmessage,
+            choices: rolechoices,
+            pageSize: rolechoices.length,
+            loop: true,
+        });
+    // console.log(rolechoices); // debug log
+    let chosenrole = rolechoices.find((elem) => { return elem.value === rolechoice });
+    return { rolechoice, chosenrole };
+};
+
+// Let the user choose an employee
+let chooseanemployee = async function (promptmessage = "Select an employee\n") {
+    let employeechoices = await EmployeeTable.getrows();
+    employeechoices.push({ name: '<Cancel>', value: -1, description: "Cancel and return" });
+    let employeechoice = await select(
+        {
+            message: promptmessage,
+            choices: employeechoices,
+            pageSize: employeechoices.length,
+            loop: true,
+        });
+    // console.log(employeechoices); // debug log
+    let chosenemployee = employeechoices.find((elem) => { return elem.value === employeechoice });
+    return { employeechoice, chosenemployee };
+};
 
 // Add a new department
 async function add_department() {
     // display department
-    // console.log("DEPARTMENT");
     // await displaySQLQueryTable(`SELECT * FROM department ORDER BY department.id`, "", ['Department Id', 'Department']);
-    console.log("\nCURRENT DEPARTMENTS".inverse);
+    console.log("\nADD A DEPARTMENT".inverse);
     await DepartmentTable.show();
 
     const newdeptname = await input({ message: 'Enter new department name' });
@@ -133,7 +168,7 @@ async function add_department() {
         };
     };
 
-    // display department
+    // display department the old way before refactor
     // console.log("DEPARTMENT");
     // await displaySQLQueryTable(`SELECT * FROM department ORDER BY department.id`, "", ['Department Id', 'Department']);
 };
@@ -147,16 +182,14 @@ async function add_role() {
     const newrolesalary = await input({ message: 'Enter a salary for the new role: ' });
 
     // Get department selection
-    let deptchoices = await DepartmentTable.getrows();
-    let deptchoice = await select(
-        {
-            message: "Select a department for the new role:\n",
-            choices: deptchoices,
-            pageSize: deptchoices.length,
-            loop: true,
-        });
+    let { deptchoice, chosendept } = await chooseadepartment("Select a department for the new role:\n");
+    if (deptchoice < 0) {
+        console.log("Cancelling add role".inverse);
+        return;
+    };
+
     if (await RoleTable.exists(newroletitle, deptchoice)) {
-        console.log(`Error: Role title ${newroletitle} already exists in the ${(deptchoices.find((elem) => elem.value === deptchoice)).name} department`.red.inverse);
+        console.log(`Error: Role title ${newroletitle} already exists in the ${chosendept.name} department`.red.inverse);
     } else {
         if (await RoleTable.add(newroletitle, newrolesalary, deptchoice)) {
             console.log("\nREFRESHED ROLES".inverse);
@@ -167,28 +200,28 @@ async function add_role() {
 };
 
 async function add_employee() {
-    console.log("\nCURRENT EMPLOYEES".inverse);
+    console.log("\nADD AN EMPLOYEE".inverse);
     await EmployeeTable.show();
 
     const firstname = await input({ message: "Enter the employee's first name: " });
     const lastname = await input({ message: "Enter the employee's last name: " });
 
     // Get department selection
-    let rolechoices = await RoleTable.getrows();
-    let rolechoice = await select(
-        {
-            message: "Select a department for the new role:\n",
-            choices: rolechoices,
-            pageSize: rolechoices.length,
-            loop: true,
-        });
+    let { rolechoice, chosenrole } = await choosearole("Select a department for the new role:\n");
+    if (rolechoice < 0) {
+        console.log("Cancelling add employee".inverse);
+        return;
+    };
+
     if (await EmployeeTable.exists(firstname, lastname, rolechoice)) {
-        console.log(`Error: Employee ${firstname} ${lastname} in ${((rolechoices.find((elem) => elem.value === rolechoice))).description} already exists`.red.inverse);
+        // console.log(`Error: Employee ${firstname} ${lastname} in ${((rolechoices.find((elem) => elem.value === rolechoice))).description} already exists`.red.inverse);
+        console.log(`Error: Employee ${firstname} ${lastname} in ${chosenrole.description} already exists`.red.inverse);
     } else {
         if (await EmployeeTable.add(firstname, lastname, rolechoice)) {
             console.log("\nREFRESHED EMPLOYEE LIST".inverse);
             await EmployeeTable.show();
-            console.log(`Added ${firstname} ${lastname} as ${(rolechoices.find((elem) => elem.value === rolechoice)).description}`.yellow.inverse);
+            //console.log(`Added ${firstname} ${lastname} as ${(rolechoices.find((elem) => elem.value === rolechoice)).description}`.yellow.inverse);
+            console.log(`Added ${firstname} ${lastname} as ${chosenrole.description}`.yellow.inverse);
         };
     };
 };
@@ -198,28 +231,30 @@ async function update_employee_role() {
     console.log("\nCURRENT EMPLOYEE LIST".inverse);
     await EmployeeTable.show();
 
-    let employeechoices = await EmployeeTable.getrows();
-    let employeechoice = await select(
-        {
-            message: "Select an employee to update to the new role:\n",
-            choices: employeechoices,
-            pageSize: employeechoices.length,
-            loop: true,
-        });
-    let chosenemployee = employeechoices.find((elem) => { return elem.value === employeechoice });
+    let { employeechoice, chosenemployee } = await chooseanemployee("Select an employee to update to the new role:\n");
+    if (employeechoice < 0) {
+        console.log("Cancelling employee role update".inverse);
+        return;
+    };
 
-    let rolechoices = await RoleTable.getrows();
-    let rolechoice = await select(
-        {
-            message: `Select a new role for employee ${chosenemployee.description}:\n`,
-            choices: rolechoices,
-            pageSize: rolechoices.length,
-            loop: true,
-        });
-    let chosenrole = rolechoices.find((elem) => elem.value === rolechoice);
+    let { rolechoice, chosenrole } = await choosearole(`Select a new role for employee ${chosenemployee.description}:\n`);
+    if (rolechoice < 0) {
+        console.log("Cancelling employee role update".inverse);
+        return;
+    };
 
-    console.log("CHOSEN EMPLOYEE:", employeechoice, chosenemployee);
-    console.log("CHOSEN ROLE:", rolechoice, chosenrole);
+    // let rolechoices = await RoleTable.getrows();
+    // let rolechoice = await select(
+    //     {
+    //         message: `Select a new role for employee ${chosenemployee.description}:\n`,
+    //         choices: rolechoices,
+    //         pageSize: rolechoices.length,
+    //         loop: true,
+    //     });
+    // let chosenrole = rolechoices.find((elem) => elem.value === rolechoice);
+
+    console.log("CHOSEN EMPLOYEE:", chosenemployee);
+    console.log("CHOSEN ROLE:", chosenrole);
 
     let employeeexists = await EmployeeTable.exists(chosenemployee.first_name, chosenemployee.last_name, rolechoice);
     console.log("employee exists:", employeeexists);
@@ -240,21 +275,6 @@ async function update_employee_role() {
             console.log(`Updated ${chosenemployee.first_name} ${chosenemployee.last_name} to ${chosenrole.description}`.yellow.inverse);
         };
     };
-};
-
-// Let the user choose an employee
-let chooseanemployee = async function (promptmessage = "Select an employee\n") {
-    let employeechoices = await EmployeeTable.getrows();
-    let employeechoice = await select(
-        {
-            message: promptmessage,
-            choices: employeechoices,
-            pageSize: employeechoices.length,
-            loop: true,
-        });
-    // console.log(employeechoices); // debug log
-    let chosenemployee = employeechoices.find((elem) => { return elem.value === employeechoice });
-    return { employeechoice, chosenemployee };
 };
 
 // Update employee's manager.
@@ -291,6 +311,11 @@ async function update_employee_manager() {
         case 'newmanager':
 
             ({ employeechoice, chosenemployee } = await chooseanemployee("Select an employee:\n"));
+            if (employeechoice < 0) {
+                console.log("Cancelling employee manager update".inverse);
+                return;
+            };
+
             console.log("CHOSEN EMPLOYEE:\n".inverse, chosenemployee);
 
             // The following object destructuring is a bit unreadable, but the following essentially means:
@@ -298,6 +323,10 @@ async function update_employee_manager() {
             //   chosenmanager = (the return value of chooseanemployee).chosenemployee
             // See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment
             ({ employeechoice: managerchoice, chosenemployee: chosenmanager } = await chooseanemployee("Select a manager to assign\n"));
+            if (managerchoice < 0) {
+                console.log("Cancelling manager update".inverse);
+                return;
+            };
             console.log("CHOSEN MANAGER:".inverse, managerchoice, chosenmanager);
 
             // Checks & validations
@@ -331,6 +360,10 @@ async function update_employee_manager() {
         case 'delmanager':
 
             ({ employeechoice, chosenemployee } = await chooseanemployee("Select an employee:\n"));
+            if (employeechoice < 0) {
+                console.log("Cancelling employee manager delete".inverse);
+                return;
+            };
             console.log("CHOSEN EMPLOYEE:".inverse, employeechoice, chosenemployee);
 
             // Inquirer prompt to select manageres
@@ -365,8 +398,54 @@ async function update_employee_manager() {
         default:
     };
 
-    // 
 };
+
+async function delete_department() {
+    console.log("\nDELETE A DEPARTMENT".inverse);
+    await DepartmentTable.show();
+
+    // Get department selection
+    let { deptchoice, chosendept } = await chooseadepartment("Select a department for the new role:\n");
+    if (deptchoice < 0) {
+        console.log("Cancelling delete department".inverse);
+        return;
+    };
+    console.log("CHOSEN DEPARTMENT TO DELETE:\n".inverse, chosendept);
+    DepartmentTable.del(deptchoice);
+    await DepartmentTable.show();
+    console.log(`\nDEPARTMENT ${chosendept.name} DELETED`.inverse);
+};
+
+async function delete_role() {
+    console.log("\nDELETE A ROLE".inverse);
+    await RoleTable.show();
+
+    let { rolechoice, chosenrole } = await choosearole("Select a role to delete:\n");
+    if (rolechoice < 0) {
+        console.log("Cancelling delete role".inverse);
+        return;
+    };
+    console.log("CHOSEN ROLE TO DELETE:\n".inverse, chosenrole);
+    RoleTable.del(rolechoice);
+    await RoleTable.show();
+    console.log(`\nROLE ${chosenrole.name} DELETED`.inverse);
+};
+
+async function delete_employee() {
+    console.log("\nDELETE EMPLOYEE".inverse);
+    await EmployeeTable.show();
+
+    let { employeechoice, chosenemployee } = await chooseanemployee("Select an employee too delete:\n");
+    if (employeechoice < 0) {
+        console.log("Cancelling delete employee".inverse);
+        return;
+    };
+    console.log("CHOSEN EMPLOYEE TO DELETE:\n".inverse, chosenemployee);
+    EmployeeTable.del(employeechoice);
+    await EmployeeTable.show();
+    console.log(`\nEMPLOYEE ${chosenemployee.name} DELETED`.inverse);
+};
+
 
 // the main while loop menu for a user to select tasks
 let answer;
@@ -425,10 +504,18 @@ do {
             await update_employee_manager();
             break;
 
-        case "polygon":
+        case "delete_department":
+            await delete_department();
             break;
-        case "setcolor":
+
+        case "delete_role":
+            await delete_role();
             break;
+
+        case "delete_employee":
+            await delete_employee();
+            break;
+
         case "quit":
             console.log("Quitting");
             process.exit();
@@ -437,3 +524,4 @@ do {
     };
 } while (answer !== "quit");
 
+// Exit main loop / program
