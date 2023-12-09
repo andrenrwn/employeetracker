@@ -15,6 +15,13 @@ let DepartmentTable = new ETDepartments();
 let RoleTable = new ETRoles();
 let EmployeeTable = new ETEmployees();
 
+let MainTitle = `
+ ____  _      ___   _     ___   _     ____  ____     _____  ___    __    __    _     ____  ___  \n\
+| |_  | |\\/| | |_) | |   / / \\ \\ \\_/ | |_  | |_       | |  | |_)  / /\\  / /\`  | |_/ | |_  | |_) \n\
+|_|__ |_|  | |_|   |_|__ \\_\\_/  |_|  |_|__ |_|__      |_|  |_| \\ /_/--\\ \\_\\_, |_| \\ |_|__ |_| \\ \n\
+                                                                                                \n\
+`;
+
 // Define menu selections
 let choices = [
     new Separator(), // Department operations
@@ -25,7 +32,7 @@ let choices = [
     },
     {
         name: "View Employee Budgets of Departments",
-        value: "view_salaries_by_department",
+        value: "view_employee_budget",
         description: "View combined salaries of all employees by department",
     },
     {
@@ -459,7 +466,10 @@ async function delete_employee() {
 };
 
 
-// the main while loop menu for a user to select tasks
+// Main loop: User menu
+
+console.log(MainTitle.yellow.bgBlue);
+
 let answer;
 do {
     answer = await select({
@@ -475,6 +485,11 @@ do {
             // await displayTable("department", "name"); // non-class function
             console.log("\nVIEW DEPARTMENTS".inverse);
             await DepartmentTable.show();
+            break;
+
+        case "view_employee_budget":
+            console.log("\nVIEW DEPARTMENT EMPLOYEE BUDGET".inverse);
+            await DepartmentTable.show_employee_budget();
             break;
 
         case "view_roles":
