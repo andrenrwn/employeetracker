@@ -31,6 +31,11 @@ let choices = [
         description: "View all departments",
     },
     {
+        name: "View Department Employees",
+        value: "view_department_employees",
+        description: "Select a Department to View its Employees",
+    },
+    {
         name: "View Employee Budgets of Departments",
         value: "view_employee_budget",
         description: "View combined salaries of all employees by department",
@@ -75,7 +80,7 @@ let choices = [
     {
         name: "View Manager Direct Reports",
         value: "view_manager_direct_reports",
-        description: "View a manager's direct reports",
+        description: "Select a manager to view their direct reports",
     },
     new Separator(), // Manipulate employees
     {
@@ -154,7 +159,7 @@ let chooseanemployee = async function (promptmessage = "Select an employee\n") {
     return { employeechoice, chosenemployee };
 };
 
-
+// View a manager's direct reports: ask the user which manager to view
 async function view_manager_direct_reports() {
     console.log("\nVIEW DIRECT REPORTS OF A MANAGER".inverse);
     await EmployeeTable.show();
@@ -164,6 +169,19 @@ async function view_manager_direct_reports() {
         return;
     };
     await EmployeeTable.show_direct_reports(employeechoice);
+};
+
+// View a department's employees: ask the user which department to view
+async function view_department_employees() {
+    console.log("\nVIEW DEPARTMENT EMPLOYEES".inverse);
+    await DepartmentTable.show();
+    // Get department selection
+    let { deptchoice, chosendept } = await chooseadepartment("Select a department to view employees from:\n");
+    if (deptchoice < 0) {
+        console.log("Cancelling view employee by department".inverse);
+        return;
+    };
+    await EmployeeTable.show_by_department(deptchoice);
 }
 
 // Add a new department
@@ -485,6 +503,11 @@ do {
             // await displayTable("department", "name"); // non-class function
             console.log("\nVIEW DEPARTMENTS".inverse);
             await DepartmentTable.show();
+            break;
+
+        case "view_department_employees":
+            // await displayTable("department", "name"); // non-class function
+            await view_department_employees();
             break;
 
         case "view_employee_budget":
