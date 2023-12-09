@@ -5,7 +5,7 @@ A command-line employeetracker_db MySQL database manager
 
 import { input, select, confirm, Separator } from '@inquirer/prompts';
 import { promises as fs } from 'fs';
-import { getSQLQuery, getColumnNames, getAllRows, displayTable, displaySQLQueryTable } from './lib/functions.mjs';
+import { isNumeric } from './lib/functions.mjs';
 import { ETDepartments, ETRoles, ETEmployees } from './lib/tabledisplay.mjs';
 import db from './config/connection.mjs';
 import Table from 'cli-table';
@@ -216,7 +216,17 @@ async function add_role() {
     await RoleTable.show();
 
     const newroletitle = await input({ message: 'Enter new role title: ' });
-    const newrolesalary = await input({ message: 'Enter a salary for the new role: ' });
+    const newrolesalary = await input({
+        message: 'Enter a salary for the new role: ',
+        name: "salary",
+        validate: (salary) => {
+            if (!isNumeric(salary)) {
+                return "Please enter a numeric value for salary";
+            } else {
+                return true;
+            };
+        },
+    });
 
     // Get department selection
     let { deptchoice, chosendept } = await chooseadepartment("Select a department for the new role:\n");
@@ -442,7 +452,7 @@ async function delete_department() {
     await DepartmentTable.show();
 
     // Get department selection
-    let { deptchoice, chosendept } = await chooseadepartment("Select a department for the new role:\n");
+    let { deptchoice, chosendept } = await chooseadepartment("Select a department to delete:\n");
     if (deptchoice < 0) {
         console.log("Cancelling delete department".inverse);
         return;
