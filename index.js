@@ -7,8 +7,8 @@ import { input, select, confirm, Separator } from '@inquirer/prompts';
 import { promises as fs } from 'fs';
 import { isNumeric } from './lib/functions.mjs';
 import { ETDepartments, ETRoles, ETEmployees } from './lib/tabledisplay.mjs';
-import db from './config/connection.mjs';
-import Table from 'cli-table';
+// import db from './config/connection.mjs';
+// import Table from 'cli-table'; // cli-table is used in functions.mjs
 import colors from 'colors';
 
 let DepartmentTable = new ETDepartments();
@@ -241,11 +241,12 @@ async function add_role() {
         if (await RoleTable.add(newroletitle, newrolesalary, deptchoice)) {
             console.log("\nREFRESHED ROLES".inverse);
             await RoleTable.show();
-            console.log(`Added ${newroletitle} with a salary of ${newrolesalary} to ${deptchoice}`.yellow.inverse);
+            console.log(`Added ${newroletitle} with a salary of ${newrolesalary} to ${chosendept.name}`.yellow.inverse);
         };
     };
 };
 
+// Add an employeee
 async function add_employee() {
     console.log("\nADD AN EMPLOYEE".inverse);
     await EmployeeTable.show();
@@ -254,7 +255,7 @@ async function add_employee() {
     const lastname = await input({ message: "Enter the employee's last name: " });
 
     // Get department selection
-    let { rolechoice, chosenrole } = await choosearole("Select a department for the new role:\n");
+    let { rolechoice, chosenrole } = await choosearole("Select a role for the new employee:\n");
     if (rolechoice < 0) {
         console.log("Cancelling add employee".inverse);
         return;
@@ -304,11 +305,11 @@ async function update_employee_role() {
     console.log("CHOSEN ROLE:", chosenrole);
 
     let employeeexists = await EmployeeTable.exists(chosenemployee.first_name, chosenemployee.last_name, rolechoice);
-    console.log("employee exists:", employeeexists);
+    // console.log("employee exists:", employeeexists); // debug logs
     if (employeeexists) {
         console.log(`Error: Employee ${chosenemployee.first_name} ${chosenemployee.last_name} in ${chosenrole.description} already exists`.red.inverse);
     } else {
-        console.log("trying calling updaterole with", employeechoice, rolechoice);
+        // console.log("trying calling updaterole with", employeechoice, rolechoice);
 
         let updateresult;
         try {
